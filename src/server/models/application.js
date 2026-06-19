@@ -9,7 +9,8 @@ const application = sequelize.define("application", {
     },
     companyName: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        minlength: 2,
     },
     jobTitle: {
         type: DataTypes.STRING,
@@ -25,7 +26,7 @@ const application = sequelize.define("application", {
     },
     appliedDate:{
         type: DataTypes.DATE,
-        allowNull: false
+        allowNull: true
     },
     notes:{
         type: DataTypes.TEXT,

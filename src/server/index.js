@@ -18,8 +18,7 @@ app.use("/api", route);
 
 const startServer = async () => {
   await sequelize.authenticate();
-  // await sequelize.sync(); // Synchronize models with the database
-
+  await sequelize.sync(); // Synchronize models with the database
   app.get("/", (req, res) => {
     res.send("Hello TypeScript + Express!");
   });
