@@ -140,30 +140,34 @@ export const searchBy = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const { companyName, jobTitle, jobType } = req.query;
+        const term = typeof req.query.term === "string" ? req.query.term.trim() : "";
+        const companyName = typeof req.query.companyName === "string" ? req.query.companyName.trim() : "";
+        const jobTitle = typeof req.query.jobTitle === "string" ? req.query.jobTitle.trim() : "";
+        const jobType = typeof req.query.jobType === "string" ? req.query.jobType.trim() : "";
 
-        const search = {};
-        if (companyName?.trim()) {
-            search.companyName = {
-                [Op.iLike]: `%${companyName.trim()}%`
-            };
+        const search = [];
+        if (companyName) {
+            search.push({ companyName: { [Op.iLike]: `%${companyName}%` } });
         }
-        if (jobTitle?.trim()) {
-            search.jobTitle = {
-                [Op.iLike]: `%${jobTitle.trim()}%`
-            };
+        if (jobTitle) {
+            search.push({ jobTitle: { [Op.iLike]: `%${jobTitle}%` } });
         }
-        if (jobType?.trim()) {
-            search.jobType = {
-                [Op.iLike]: `%${jobType.trim()}%`
-            };
+        if (jobType) {
+            search.push({ jobType: jobType });
         }
 
-        const { count, rows } = await application.findAll({
-            where: {
-                [Op.or]: search.length > 0 ? search : undefined
+        if (term) {
+            search.push(
+                { companyName: { [Op.iLike]: `%${term}%` } },
+                { jobTitle: { [Op.iLike]: `%${term}%` } },
+                { notes: { [Op.iLike]: `%${term}%` } }
+            );
+        }
 
-            },
+        const where = search.length > 0 ? { [Op.or]: search } : undefined;
+
+        const { count, rows } = await application.findAndCountAll({
+            where,
             limit,
             offset,
             order: [["createdAt", "DESC"]]
@@ -172,13 +176,16 @@ export const searchBy = async (req, res) => {
         res.status(200).json({
             message: "Search completed successfully",
             searchResults: rows,
-            total: count.length,
-            totalPages: Math.ceil(count.length / limit),
+            total: count,
+            totalPages: Math.ceil(count / limit),
             currentPage: page,
         });
 
     } catch (error) {
-        res.status(500).json({ message: "Server Error", error: error.message });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('searchBy error:', errorMessage);
+        console.error(error instanceof Error ? error.stack : error);
+        res.status(500).json({ message: "Server Error", error: errorMessage });
 
     }
 }

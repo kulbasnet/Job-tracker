@@ -1,14 +1,14 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import {sequelize} from "./models/db.js";
-import application from "./models/application.js";
 import route from "./routes/route.js";
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-
 //Middleware
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api", route);
